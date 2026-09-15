@@ -21,8 +21,17 @@ npm run dev
 Đóng gói thành app thật:
 
 ```bash
-npm run build:mac     # tạo dist/TSchedule-<version>.dmg
+npm run build:mac           # cả Apple Silicon và Intel
+npm run build:mac:arm64     # chỉ Apple Silicon, nhanh hơn
 ```
+
+Kết quả nằm trong `dist/`, kiểu `TSchedule-0.1.0-arm64.dmg`.
+
+> **Đừng chạy `electron-builder` trực tiếp.** Hai script trên chạy `npm run build`
+> trước rồi mới đóng gói. Gọi thẳng `npx electron-builder --mac` sẽ đóng gói cây
+> thư mục chưa biên dịch và tạo ra một app chết ngay khi mở với lỗi
+> `Cannot find module .../out/main/index.js`. Có một lớp chặn ở `beforePack` bắt
+> trường hợp này và báo lỗi rõ ràng thay vì để bạn tạo ra app hỏng.
 
 > **Lưu ý về thông báo:** ở chế độ `npm run dev`, macOS hiển thị tên người gửi thông báo là
 > "Electron" thay vì "TSchedule". Đó là giới hạn của bản chưa đóng gói, không phải lỗi — bản

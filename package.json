@@ -15,6 +15,7 @@
     "smoke": "electron scripts/smoke/main.cjs",
     "check": "npm run typecheck && npm test && npm run build",
     "build:mac": "npm run build && electron-builder --mac",
+    "build:mac:arm64": "npm run build && electron-builder --mac --arm64",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {

@@ -6,6 +6,10 @@ directories:
   buildResources: build
   output: dist
 
+# Packaging an uncompiled tree produces an app that dies on launch with
+# "Cannot find module .../out/main/index.js". Fail with an explanation instead.
+beforePack: scripts/before-pack.cjs
+
 files:
   - out/**
   - package.json
