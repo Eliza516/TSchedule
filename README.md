@@ -44,6 +44,15 @@ không thể chặn bạn lúc mở máy buổi sáng.
 
 ---
 
+## Tài liệu
+
+**[Hướng dẫn sử dụng chi tiết (tiếng Việt)](docs/HUONG-DAN-SU-DUNG.md)** — từng màn hình, từng
+tính năng, cách đọc các con số trong Stats, và vì sao app được thiết kế như vậy.
+
+Phần dưới đây là bản tóm tắt.
+
+---
+
 ## Nghi thức check-in — phần cốt lõi
 
 Đây là thứ phân biệt TSchedule với một app to-do thường.
