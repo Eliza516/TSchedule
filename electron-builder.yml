@@ -1,0 +1,36 @@
+appId: com.tschedule.app
+productName: TSchedule
+copyright: TSchedule
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - out/**
+  - package.json
+
+# The tray template image is read from process.resourcesPath at runtime, so it
+# must sit outside the asar archive.
+extraResources:
+  - from: resources
+    to: resources
+
+mac:
+  category: public.app-category.productivity
+  icon: build/icon.png
+  darkModeSupport: true
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  # Unsigned local builds: Gatekeeper still asks once on first open.
+  identity: null
+  extendInfo:
+    NSUserNotificationAlertStyle: alert
+
+dmg:
+  title: TSchedule
+
+linux:
+  target: [AppImage]
+  category: Utility

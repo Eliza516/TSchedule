@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:watch": "vitest",
+    "smoke": "electron scripts/smoke/main.cjs",
     "check": "npm run typecheck && npm test && npm run build",
     "build:mac": "npm run build && electron-builder --mac",
     "postinstall": "electron-builder install-app-deps"

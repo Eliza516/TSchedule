@@ -96,6 +96,7 @@ export interface IpcContract {
   'stats:report': (from: DayString, to: DayString) => StatsReport
 
   'app:export': () => string | null
+  'app:exportMarkdown': () => string | null
   'app:import': () => boolean
   'app:showMain': (route: NotificationRoute | null) => void
   'app:quit': () => void
@@ -166,6 +167,7 @@ export const IPC_CHANNELS: IpcChannel[] = [
   'capture:close',
   'stats:report',
   'app:export',
+  'app:exportMarkdown',
   'app:import',
   'app:showMain',
   'app:quit'

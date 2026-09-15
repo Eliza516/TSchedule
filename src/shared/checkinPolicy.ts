@@ -51,7 +51,7 @@ function isSnoozed(row: CheckinRow | undefined, now: Instant, maxSnoozes: number
   return row.snoozedUntil > now
 }
 
-export function snoozesLeft(row: CheckinRow | undefined, maxSnoozes: number): number {
+export function snoozesLeft(row: CheckinRow | null | undefined, maxSnoozes: number): number {
   return Math.max(0, maxSnoozes - (row?.snoozeCount ?? 0))
 }
 

@@ -1,0 +1,66 @@
+/* Warm paper light theme, calm ink dark theme. Follows the system setting. */
+:root {
+  color-scheme: light dark;
+
+  --paper: #f7f6f3;
+  --surface: #ffffff;
+  --surface-sunk: #f0efea;
+  --surface-hover: #f4f3ef;
+  --line: #e2e0d9;
+  --line-strong: #cdcac0;
+
+  --ink: #23232a;
+  --ink-soft: #55555f;
+  --ink-muted: #85858f;
+
+  --accent: #2f6f66;
+  --accent-soft: #e4efec;
+  --accent-ink: #1f4f48;
+
+  --warn: #9a6408;
+  --warn-soft: #fbf0dc;
+  --danger: #a32a20;
+  --danger-soft: #fae7e5;
+  --focus: #6a4fbf;
+  --focus-soft: #ede8fa;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgb(20 20 25 / 6%), 0 1px 3px rgb(20 20 25 / 4%);
+  --shadow: 0 2px 6px rgb(20 20 25 / 8%), 0 8px 24px rgb(20 20 25 / 6%);
+  --shadow-lg: 0 10px 40px rgb(20 20 25 / 18%), 0 2px 8px rgb(20 20 25 / 10%);
+
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #17171b;
+    --surface: #1f1f25;
+    --surface-sunk: #141418;
+    --surface-hover: #26262d;
+    --line: #2e2e36;
+    --line-strong: #3d3d47;
+
+    --ink: #ececef;
+    --ink-soft: #b2b2bc;
+    --ink-muted: #82828d;
+
+    --accent: #6fbfae;
+    --accent-soft: #1c2e2b;
+    --accent-ink: #9fd8cb;
+
+    --warn: #e2a64b;
+    --warn-soft: #302617;
+    --danger: #e9857c;
+    --danger-soft: #331e1c;
+    --focus: #a894ea;
+    --focus-soft: #262036;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow: 0 2px 8px rgb(0 0 0 / 45%);
+    --shadow-lg: 0 12px 44px rgb(0 0 0 / 60%);
+  }
+}
