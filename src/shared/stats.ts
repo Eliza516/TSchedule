@@ -106,10 +106,16 @@ export function goalProgressRatio(input: {
   milestonesTotal: number
   tasksDone: number
   tasksTotal: number
+  /** pages read, lessons watched - counted separately from the tasks carrying them */
+  unitsDone?: number
+  unitsTotal?: number
 }): number {
   const parts: number[] = []
   if (input.milestonesTotal > 0) parts.push(input.milestonesDone / input.milestonesTotal)
   if (input.tasksTotal > 0) parts.push(input.tasksDone / input.tasksTotal)
+  if ((input.unitsTotal ?? 0) > 0) {
+    parts.push(Math.min(1, (input.unitsDone ?? 0) / (input.unitsTotal as number)))
+  }
   if (parts.length === 0) return 0
   return parts.reduce((a, b) => a + b, 0) / parts.length
 }

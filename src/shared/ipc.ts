@@ -14,8 +14,15 @@ import type {
   HabitDraft,
   HabitWithStreak,
   InboxItem,
+  Material,
+  MaterialDraft,
+  MaterialPatch,
+  MaterialSection,
+  MaterialSectionDraft,
+  MaterialWithPace,
   Milestone,
   MilestoneDraft,
+  PickedMaterialFile,
   MorningSubmission,
   NotDoneReason,
   NotificationRoute,
@@ -62,6 +69,16 @@ export interface IpcContract {
   'milestones:toggle': (id: string) => Milestone
   'milestones:delete': (id: string) => void
 
+  'materials:list': () => MaterialWithPace[]
+  'materials:forGoal': (goalId: string) => MaterialWithPace[]
+  'materials:create': (draft: MaterialDraft) => Material
+  'materials:update': (id: string, patch: MaterialPatch) => Material
+  'materials:delete': (id: string) => void
+  'materials:sections': (id: string) => MaterialSection[]
+  'materials:saveSections': (id: string, sections: MaterialSectionDraft[]) => MaterialSection[]
+  /** Opens a file picker and, for a PDF, reads its page count and bookmarks. */
+  'materials:pickFile': () => PickedMaterialFile | null
+
   'habits:list': () => HabitWithStreak[]
   'habits:create': (draft: HabitDraft) => Habit
   'habits:update': (id: string, patch: Partial<HabitDraft> & { active?: boolean }) => Habit
@@ -99,6 +116,10 @@ export interface IpcContract {
   'app:exportMarkdown': () => string | null
   'app:import': () => boolean
   'app:showMain': (route: NotificationRoute | null) => void
+  /** Opens an http(s) link in the default browser. */
+  'app:openExternal': (url: string) => void
+  /** Opens a file the app itself is holding, in whatever app owns that type. */
+  'app:openPath': (filePath: string) => void
   'app:quit': () => void
 }
 
@@ -140,6 +161,14 @@ export const IPC_CHANNELS: IpcChannel[] = [
   'milestones:update',
   'milestones:toggle',
   'milestones:delete',
+  'materials:list',
+  'materials:forGoal',
+  'materials:create',
+  'materials:update',
+  'materials:delete',
+  'materials:sections',
+  'materials:saveSections',
+  'materials:pickFile',
   'habits:list',
   'habits:create',
   'habits:update',
@@ -170,6 +199,8 @@ export const IPC_CHANNELS: IpcChannel[] = [
   'app:exportMarkdown',
   'app:import',
   'app:showMain',
+  'app:openExternal',
+  'app:openPath',
   'app:quit'
 ]
 

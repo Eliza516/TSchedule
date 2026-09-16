@@ -1,7 +1,9 @@
 import type { DayString } from '@shared/types'
 import { atTimeOnDay, addDays, toDayString } from '@shared/time'
 import { isDueOn } from '@shared/recurrence'
+import { describeAssignment, isStudyDay, paceFor } from '@shared/studyPlan'
 import * as habitRepo from '../db/repos/habits'
+import * as materialRepo from '../db/repos/materials'
 import * as taskRepo from '../db/repos/tasks'
 import * as reminderRepo from '../db/repos/reminders'
 import { getMeta, setMeta } from '../db/repos/settings'
@@ -10,8 +12,47 @@ import * as taskService from './taskService'
 const LAST_RUN_KEY = 'lastDailyRun'
 
 /**
- * The once-per-day housekeeping: turn due habits into real tasks and sweep up
- * reminders that have already fired.
+ * A day's share of every course and book being worked through.
+ *
+ * The share is worked out fresh from what is still left, so a missed day is
+ * absorbed by the days that follow instead of leaving a stale task behind.
+ * Exported on its own because a material added at noon should show up in today
+ * rather than tomorrow.
+ */
+export function generateMaterialTasks(day: DayString = toDayString(Date.now())): number {
+  let created = 0
+  const existing = taskRepo.listDay(day)
+
+  for (const material of materialRepo.listMaterials({ activeOnly: true })) {
+    if (!isStudyDay(material.weekdays, day)) continue
+    if (existing.some((task) => task.materialId === material.id)) continue
+
+    const pace = paceFor(material, materialRepo.unitsDone(material.id), day)
+    if (pace.remainingUnits === 0 || pace.unitsToday === 0) continue
+
+    taskService.createTask(
+      {
+        title: describeAssignment(material, pace, materialRepo.listSections(material.id)),
+        day,
+        startAt: material.studyTime ? atTimeOnDay(day, material.studyTime) : null,
+        estimateMinutes: pace.minutesToday,
+        goalId: material.goalId,
+        url: material.url,
+        materialId: material.id,
+        plannedUnits: pace.unitsToday,
+        unitFrom: pace.unitFrom,
+        unitTo: pace.unitTo
+      },
+      { silent: true }
+    )
+    created += 1
+  }
+  return created
+}
+
+/**
+ * The once-per-day housekeeping: turn due habits and study materials into real
+ * tasks, and sweep up reminders that have already fired.
  *
  * Note what is deliberately *not* here: unfinished work is never rolled forward
  * automatically. It stays on the day it was planned for until the user triages
@@ -41,6 +82,8 @@ export function runForDay(day: DayString = toDayString(Date.now())): number {
     )
     created += 1
   }
+
+  created += generateMaterialTasks(day)
 
   reminderRepo.pruneOldReminders(new Date(addDays(day, -14)).getTime())
   setMeta(LAST_RUN_KEY, day)

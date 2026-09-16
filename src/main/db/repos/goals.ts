@@ -10,6 +10,7 @@ import type {
 import { daysBetween } from '@shared/time'
 import { goalProgressRatio } from '@shared/stats'
 import { getDb, newId } from '../index'
+import { goalUnits } from './materials'
 
 interface GoalRow {
   id: string
@@ -92,6 +93,7 @@ export function goalProgress(
     )
     .get(goal.id) as { seconds: number }
 
+  const units = goalUnits(goal.id)
   const milestonesDone = milestones.filter((m) => m.doneAt != null).length
   const tasksDone = taskCounts.done ?? 0
   const tasksTotal = taskCounts.total ?? 0
@@ -105,7 +107,9 @@ export function goalProgress(
       milestonesDone,
       milestonesTotal: milestones.length,
       tasksDone,
-      tasksTotal
+      tasksTotal,
+      unitsDone: units.done,
+      unitsTotal: units.total
     }),
     milestonesDone,
     milestonesTotal: milestones.length,

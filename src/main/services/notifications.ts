@@ -3,12 +3,17 @@ import type { Milestone, NotificationRoute, Task } from '@shared/types'
 import { formatMinutes } from '@shared/time'
 import { showMainWindow } from '../windows'
 
+export interface NotifyAction {
+  label: string
+  run: () => void
+}
+
 export interface NotifyOptions {
   title: string
   body: string
   route?: NotificationRoute
-  actionLabel?: string
-  onAction?: () => void
+  /** macOS shows the first one as a button and the rest on hover. */
+  actions?: NotifyAction[]
   silent?: boolean
 }
 
@@ -19,16 +24,17 @@ export interface NotifyOptions {
 export function notify(options: NotifyOptions): void {
   if (!Notification.isSupported()) return
 
+  const actions = options.actions ?? []
   const notification = new Notification({
     title: options.title,
     body: options.body,
     silent: options.silent ?? true,
-    actions: options.actionLabel ? [{ type: 'button', text: options.actionLabel }] : undefined
+    actions: actions.map((action) => ({ type: 'button' as const, text: action.label }))
   })
 
   notification.on('click', () => showMainWindow(options.route ?? { view: 'today' }))
-  if (options.onAction) {
-    notification.on('action', () => options.onAction?.())
+  if (actions.length > 0) {
+    notification.on('action', (_event, index) => actions[index]?.run())
   }
   notification.show()
 }
@@ -42,14 +48,25 @@ export function notifyTaskLead(task: Task, minutesBefore: number): void {
   })
 }
 
-export function notifyTaskStart(task: Task, onStartTimer: () => void): void {
+/**
+ * The moment a task is due. A task that carries something to open - a course
+ * page, a book on disk - offers that first: the whole point is that starting
+ * should be one click away from the notification.
+ */
+export function notifyTaskStart(
+  task: Task,
+  handlers: { onStartTimer: () => void; onOpen?: (() => void) | null }
+): void {
   const estimate = task.estimateMinutes ? ` · est. ${formatMinutes(task.estimateMinutes)}` : ''
+  const actions: NotifyAction[] = []
+  if (handlers.onOpen) actions.push({ label: 'Open', run: handlers.onOpen })
+  actions.push({ label: 'Start timer', run: handlers.onStartTimer })
+
   notify({
     title: 'Now',
     body: `${task.title}${estimate}`,
     route: { view: 'today', taskId: task.id, day: task.day },
-    actionLabel: 'Start timer',
-    onAction: onStartTimer
+    actions
   })
 }
 

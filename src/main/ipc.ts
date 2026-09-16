@@ -1,4 +1,5 @@
-import { app, ipcMain } from 'electron'
+import { basename, extname } from 'node:path'
+import { app, dialog, ipcMain, shell } from 'electron'
 import { IPC_CHANNELS, type IpcChannel, type IpcContract } from '@shared/ipc'
 import type { AppSettings, CaptureResult, DayString } from '@shared/types'
 import { toDayString } from '@shared/time'
@@ -6,6 +7,7 @@ import { parseQuickAdd } from '@shared/quickAdd'
 import * as taskRepo from './db/repos/tasks'
 import * as goalRepo from './db/repos/goals'
 import * as habitRepo from './db/repos/habits'
+import * as materialRepo from './db/repos/materials'
 import * as checkinRepo from './db/repos/checkins'
 import * as noteRepo from './db/repos/notes'
 import * as inboxRepo from './db/repos/inbox'
@@ -15,6 +17,9 @@ import * as checkins from './services/checkins'
 import * as timer from './services/timer'
 import * as taskService from './services/taskService'
 import * as backup from './services/backup'
+import * as dailyRun from './services/dailyRun'
+import { readPdfOutline } from './services/pdfOutline'
+import { sectionsFromPages } from '@shared/studyPlan'
 import { buildReport } from './services/stats'
 import { registerShortcuts } from './shortcuts'
 import { applyDockVisibility, broadcast, hideCaptureWindow, setStrictness, showMainWindow } from './windows'
@@ -65,6 +70,17 @@ function capture(text: string): CaptureResult {
     remindMinutesBefore: parsed.remindMinutesBefore
   })
   return { kind: 'task', task, item: null }
+}
+
+/** Only http(s) survives: a `file:` or `javascript:` link must never be opened. */
+function safeUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    const parsed = new URL(url.trim())
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.toString() : null
+  } catch {
+    return null
+  }
 }
 
 const handlers: Handlers = {
@@ -127,6 +143,63 @@ const handlers: Handlers = {
   'milestones:delete': (id) => {
     goalRepo.deleteMilestone(id)
     broadcast('data:changed', { scope: 'goals' })
+  },
+
+  'materials:list': () => materialRepo.listWithPace(today()),
+  'materials:forGoal': (goalId) => materialRepo.materialsForGoal(goalId, today()),
+  'materials:create': (draft) => {
+    const material = materialRepo.createMaterial({ ...draft, url: safeUrl(draft.url) })
+    // Added at noon, it should still show up in today rather than tomorrow.
+    dailyRun.generateMaterialTasks(today())
+    broadcast('data:changed', { scope: 'all' })
+    return material
+  },
+  'materials:update': (id, patch) => {
+    const material = materialRepo.updateMaterial(id, {
+      ...patch,
+      ...(patch.url !== undefined ? { url: safeUrl(patch.url) } : {})
+    })
+    broadcast('data:changed', { scope: 'all' })
+    return material
+  },
+  'materials:delete': (id) => {
+    materialRepo.deleteMaterial(id)
+    broadcast('data:changed', { scope: 'all' })
+  },
+  'materials:sections': (id) => materialRepo.listSections(id),
+  'materials:saveSections': (id, sections) => {
+    const saved = materialRepo.replaceSections(id, sections)
+    broadcast('data:changed', { scope: 'goals' })
+    return saved
+  },
+  'materials:pickFile': async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Choose a book or a document',
+      properties: ['openFile'],
+      filters: [{ name: 'Books', extensions: ['pdf', 'epub'] }]
+    })
+    if (canceled || filePaths.length === 0) return null
+
+    const filePath = filePaths[0]
+    const extension = extname(filePath)
+    const title = basename(filePath, extension)
+    // Only PDFs carry a table of contents we can read; everything else is typed
+    // in by hand, which the form is built to expect anyway.
+    if (extension.toLowerCase() !== '.pdf') {
+      return { filePath, title, pageCount: 0, sections: [] }
+    }
+    try {
+      const outline = await readPdfOutline(filePath)
+      return {
+        filePath,
+        title,
+        pageCount: outline.pageCount,
+        sections: sectionsFromPages(outline.sections, outline.pageCount)
+      }
+    } catch {
+      // A scan, an encrypted file, a broken export: still usable, just manual.
+      return { filePath, title, pageCount: 0, sections: [] }
+    }
   },
 
   'habits:list': () => habitRepo.listHabits(today()),
@@ -205,6 +278,15 @@ const handlers: Handlers = {
     return imported
   },
   'app:showMain': (route) => showMainWindow(route),
+  'app:openExternal': (url) => {
+    const safe = safeUrl(url)
+    if (safe) void shell.openExternal(safe)
+  },
+  'app:openPath': (filePath) => {
+    // The renderer may ask for a file the app is already holding, and no other:
+    // the bridge is an allow-list, not a way to reach the rest of the disk.
+    if (materialRepo.hasFilePath(filePath)) void shell.openPath(filePath)
+  },
   'app:quit': () => app.quit()
 }
 

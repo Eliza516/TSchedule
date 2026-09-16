@@ -38,6 +38,17 @@ export interface Task {
   goalId: string | null
   milestoneId: string | null
   habitId: string | null
+  /** the study material this task was generated from */
+  materialId: string | null
+  /** how much of that material this task covers, in the material's own unit */
+  plannedUnits: number | null
+  /** how much was actually got through; null until the task is ticked off */
+  doneUnits: number | null
+  /** the stretch this task covers: page 45 to page 68, lesson 13 to 15 */
+  unitFrom: number | null
+  unitTo: number | null
+  /** something to open when the work starts - a course page, a book online */
+  url: string | null
   /** null = fall back to the global default */
   remindMinutesBefore: number | null
   rolledOverCount: number
@@ -60,6 +71,11 @@ export interface TaskDraft {
   goalId?: string | null
   milestoneId?: string | null
   habitId?: string | null
+  materialId?: string | null
+  plannedUnits?: number | null
+  unitFrom?: number | null
+  unitTo?: number | null
+  url?: string | null
   remindMinutesBefore?: number | null
   tags?: string[]
 }
@@ -78,6 +94,8 @@ export type TaskPatch = Partial<
     | 'sortOrder'
     | 'goalId'
     | 'milestoneId'
+    | 'doneUnits'
+    | 'url'
     | 'remindMinutesBefore'
     | 'tags'
   >
@@ -128,6 +146,118 @@ export interface GoalProgress {
 export interface GoalWithProgress extends Goal {
   milestones: Milestone[]
   progress: GoalProgress
+}
+
+/* -------------------------------------------------------------- materials */
+
+/** A course is worked through in lessons; a book in pages or in chapters. */
+export type MaterialKind = 'course' | 'book'
+export type UnitKind = 'lesson' | 'chapter' | 'page'
+
+export const UNIT_LABELS: Record<UnitKind, { one: string; many: string }> = {
+  lesson: { one: 'bài', many: 'bài' },
+  chapter: { one: 'chương', many: 'chương' },
+  page: { one: 'trang', many: 'trang' }
+}
+
+/**
+ * Something to work through on a deadline: a Coursera course, a PDF on disk, a
+ * paper book. The app never tracks it remotely - it holds the link, the table of
+ * contents and the arithmetic, and the user says how far they got.
+ */
+export interface Material {
+  id: string
+  goalId: string | null
+  kind: MaterialKind
+  title: string
+  /** an http(s) page to open, when the material lives on the web */
+  url: string | null
+  /** a file to open, when it lives on this machine */
+  filePath: string | null
+  unitKind: UnitKind
+  totalUnits: number
+  /** already behind you when the material was added, so pacing starts from there */
+  unitsDoneBefore: number
+  minutesPerUnit: number | null
+  /** Monday-first weekday indices: Mon = 0 ... Sun = 6 */
+  weekdays: number[]
+  /** 'HH:mm' used as the start time of generated tasks */
+  studyTime: string | null
+  /** a ceiling on a day's share, so a tight deadline warns instead of piling up */
+  maxUnitsPerDay: number | null
+  /** null = fall back to the goal's target date */
+  targetDate: DayString | null
+  active: boolean
+  createdAt: Instant
+  updatedAt: Instant
+}
+
+/** A chapter, or a part of a course. Optional: pacing works without any. */
+export interface MaterialSection {
+  id: string
+  materialId: string
+  title: string
+  startUnit: number
+  endUnit: number
+  sortOrder: number
+}
+
+export interface MaterialSectionDraft {
+  title: string
+  startUnit: number
+  endUnit: number
+}
+
+export interface MaterialDraft {
+  goalId?: string | null
+  kind: MaterialKind
+  title: string
+  url?: string | null
+  filePath?: string | null
+  unitKind: UnitKind
+  totalUnits: number
+  unitsDoneBefore?: number
+  minutesPerUnit?: number | null
+  weekdays: number[]
+  studyTime?: string | null
+  maxUnitsPerDay?: number | null
+  targetDate?: DayString | null
+  sections?: MaterialSectionDraft[]
+}
+
+export type MaterialPatch = Partial<MaterialDraft> & { active?: boolean }
+
+/** What the renderer gets: the material, its contents and today's share. */
+export interface MaterialWithPace extends Material {
+  sections: MaterialSection[]
+  unitsDone: number
+  pace: StudyPace
+}
+
+export interface StudyPace {
+  /** units still ahead, counting neither what was done before nor what is logged */
+  remainingUnits: number
+  /** eligible days from today through the target date, inclusive */
+  studyDaysLeft: number
+  unitsToday: number
+  /** the stretch today's share covers */
+  unitFrom: number
+  unitTo: number
+  minutesToday: number | null
+  /** true when the deadline needs more per day than maxUnitsPerDay allows */
+  overloaded: boolean
+  /** when overloaded, the earliest day the material can realistically be finished */
+  projectedFinishDay: DayString | null
+}
+
+/** What the file picker hands back: the file, plus whatever the PDF told us. */
+export interface PickedMaterialFile {
+  filePath: string
+  /** the file name, minus its extension - a reasonable first guess at the title */
+  title: string
+  /** 0 when the file is not a PDF, or could not be read */
+  pageCount: number
+  sections: MaterialSectionDraft[]
 }
 
 /* ----------------------------------------------------------------- habits */

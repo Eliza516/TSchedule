@@ -134,5 +134,47 @@ CREATE TABLE inbox_items (
   created_at   INTEGER NOT NULL,
   processed_at INTEGER
 );
+`,
+  /* 002 - study materials: courses and books paced towards a deadline */ `
+CREATE TABLE materials (
+  id                TEXT PRIMARY KEY,
+  goal_id           TEXT REFERENCES goals(id) ON DELETE SET NULL,
+  kind              TEXT NOT NULL,
+  title             TEXT NOT NULL,
+  url               TEXT,
+  file_path         TEXT,
+  unit_kind         TEXT NOT NULL,
+  total_units       INTEGER NOT NULL,
+  units_done_before INTEGER NOT NULL DEFAULT 0,
+  minutes_per_unit  INTEGER,
+  weekdays_json     TEXT NOT NULL,
+  study_time        TEXT,
+  max_units_per_day INTEGER,
+  target_date       TEXT,
+  active            INTEGER NOT NULL DEFAULT 1,
+  created_at        INTEGER NOT NULL,
+  updated_at        INTEGER NOT NULL
+);
+CREATE INDEX idx_materials_goal ON materials(goal_id);
+
+-- The table of contents: chapters of a book, parts of a course. Optional.
+CREATE TABLE material_sections (
+  id          TEXT PRIMARY KEY,
+  material_id TEXT NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  start_unit  INTEGER NOT NULL,
+  end_unit    INTEGER NOT NULL,
+  sort_order  REAL NOT NULL
+);
+CREATE INDEX idx_sections_material ON material_sections(material_id, sort_order);
+
+ALTER TABLE tasks ADD COLUMN url           TEXT;
+ALTER TABLE tasks ADD COLUMN material_id   TEXT REFERENCES materials(id) ON DELETE SET NULL;
+ALTER TABLE tasks ADD COLUMN planned_units INTEGER;
+ALTER TABLE tasks ADD COLUMN done_units    INTEGER;
+ALTER TABLE tasks ADD COLUMN unit_from     INTEGER;
+ALTER TABLE tasks ADD COLUMN unit_to       INTEGER;
+
+CREATE UNIQUE INDEX idx_tasks_material_day ON tasks(material_id, day) WHERE material_id IS NOT NULL;
 `
 ]

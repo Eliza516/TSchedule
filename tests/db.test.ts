@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { closeDatabase, initDatabase } from '../src/main/db'
 import * as tasks from '../src/main/db/repos/tasks'
 import * as goals from '../src/main/db/repos/goals'
+import * as materials from '../src/main/db/repos/materials'
 import * as checkins from '../src/main/db/repos/checkins'
 import * as reminders from '../src/main/db/repos/reminders'
 import * as settings from '../src/main/db/repos/settings'
@@ -220,5 +221,83 @@ describe('goals', () => {
     const task = tasks.createTask({ title: 'Survivor', day: TODAY, goalId: goal.id })
     goals.deleteGoal(goal.id)
     expect(tasks.getTask(task.id)!.goalId).toBeNull()
+  })
+})
+
+describe('materials', () => {
+  function addBook(): string {
+    return materials.createMaterial({
+      kind: 'book',
+      title: 'Clean Code',
+      filePath: '/books/clean-code.pdf',
+      unitKind: 'page',
+      totalUnits: 60,
+      weekdays: [0, 1, 2, 3, 4],
+      studyTime: '20:00',
+      targetDate: '2026-03-20',
+      sections: [
+        { title: 'Ch.1', startUnit: 1, endUnit: 30 },
+        { title: 'Ch.2', startUnit: 31, endUnit: 60 }
+      ]
+    }).id
+  }
+
+  it('round-trips a material and its table of contents', () => {
+    const id = addBook()
+    const material = materials.getMaterial(id)!
+    expect(material.kind).toBe('book')
+    expect(material.weekdays).toEqual([0, 1, 2, 3, 4])
+    expect(material.active).toBe(true)
+    expect(materials.listSections(id).map((s) => s.title)).toEqual(['Ch.1', 'Ch.2'])
+  })
+
+  it('replaces the whole table of contents rather than merging it', () => {
+    const id = addBook()
+    materials.replaceSections(id, [{ title: 'Only one', startUnit: 1, endUnit: 60 }])
+    expect(materials.listSections(id)).toHaveLength(1)
+  })
+
+  it('falls back to the goal deadline when the material has none of its own', () => {
+    const goal = goals.createGoal({ title: 'Exam', targetDate: '2026-06-01' })
+    const id = materials.createMaterial({
+      goalId: goal.id,
+      kind: 'course',
+      title: 'ML',
+      unitKind: 'lesson',
+      totalUnits: 10,
+      weekdays: [0, 1, 2, 3, 4]
+    }).id
+    expect(materials.getMaterial(id)!.targetDate).toBe('2026-06-01')
+  })
+
+  it('counts progress from the tasks that were ticked off', () => {
+    const id = addBook()
+    const task = tasks.createTask({
+      title: 'Clean Code — trang 1–6',
+      day: TODAY,
+      materialId: id,
+      plannedUnits: 6,
+      unitFrom: 1,
+      unitTo: 6,
+      url: null
+    })
+    expect(materials.unitsDone(id)).toBe(0)
+    tasks.updateTask(task.id, { doneUnits: 6 })
+    expect(materials.unitsDone(id)).toBe(6)
+    expect(tasks.getTask(task.id)!.plannedUnits).toBe(6)
+    expect(tasks.getTask(task.id)!.unitTo).toBe(6)
+  })
+
+  it('only admits file paths it is actually holding', () => {
+    addBook()
+    expect(materials.hasFilePath('/books/clean-code.pdf')).toBe(true)
+    expect(materials.hasFilePath('/etc/passwd')).toBe(false)
+  })
+
+  it('keeps a task when its material is deleted, just unlinked', () => {
+    const id = addBook()
+    const task = tasks.createTask({ title: 'Read', day: TODAY, materialId: id })
+    materials.deleteMaterial(id)
+    expect(tasks.getTask(task.id)!.materialId).toBeNull()
   })
 })

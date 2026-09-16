@@ -38,6 +38,15 @@ export function setStatus(
     if (status === 'done') habitRepo.logHabit(task.habitId, task.day)
     else habitRepo.unlogHabit(task.habitId, task.day)
   }
+  // Ticking off a study task means its whole share was got through. Anyone who
+  // managed less says so by editing the task, which is what drives tomorrow's
+  // share back up.
+  if (task.materialId && task.plannedUnits != null) {
+    return afterWrite(
+      taskRepo.updateTask(task.id, { doneUnits: status === 'done' ? task.plannedUnits : null }),
+      options
+    )
+  }
   return afterWrite(task, options)
 }
 

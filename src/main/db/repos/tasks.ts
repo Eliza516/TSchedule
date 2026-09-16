@@ -23,6 +23,12 @@ interface TaskRow {
   goal_id: string | null
   milestone_id: string | null
   habit_id: string | null
+  material_id: string | null
+  planned_units: number | null
+  done_units: number | null
+  unit_from: number | null
+  unit_to: number | null
+  url: string | null
   remind_minutes_before: number | null
   rolled_over_count: number
   original_day: string | null
@@ -60,6 +66,12 @@ export function mapTask(row: TaskRow): Task {
     goalId: row.goal_id,
     milestoneId: row.milestone_id,
     habitId: row.habit_id,
+    materialId: row.material_id,
+    plannedUnits: row.planned_units,
+    doneUnits: row.done_units,
+    unitFrom: row.unit_from,
+    unitTo: row.unit_to,
+    url: row.url,
     remindMinutesBefore: row.remind_minutes_before,
     rolledOverCount: row.rolled_over_count,
     originalDay: row.original_day,
@@ -101,6 +113,10 @@ export function getTask(id: string): Task | null {
   return row ? mapTask(row) : null
 }
 
+export function tasksForMaterial(materialId: string): Task[] {
+  return query(`${SELECT} WHERE t.material_id = ? ORDER BY t.day`, materialId)
+}
+
 export function tasksForGoal(goalId: string): Task[] {
   return query(`${SELECT} WHERE t.goal_id = ? ORDER BY t.day DESC, t.sort_order`, goalId)
 }
@@ -134,10 +150,12 @@ export function createTask(draft: TaskDraft, now = Date.now()): Task {
   db.transaction(() => {
     db.prepare(
       `INSERT INTO tasks (id, title, notes, day, start_at, estimate_minutes, status, is_mit,
-                          sort_order, goal_id, milestone_id, habit_id, remind_minutes_before,
+                          sort_order, goal_id, milestone_id, habit_id, material_id,
+                          planned_units, unit_from, unit_to, url, remind_minutes_before,
                           original_day, created_at, updated_at)
        VALUES (@id, @title, @notes, @day, @startAt, @estimateMinutes, 'todo', @isMit,
-               @sortOrder, @goalId, @milestoneId, @habitId, @remindMinutesBefore,
+               @sortOrder, @goalId, @milestoneId, @habitId, @materialId,
+               @plannedUnits, @unitFrom, @unitTo, @url, @remindMinutesBefore,
                @day, @now, @now)`
     ).run({
       id,
@@ -151,6 +169,11 @@ export function createTask(draft: TaskDraft, now = Date.now()): Task {
       goalId: draft.goalId ?? null,
       milestoneId: draft.milestoneId ?? null,
       habitId: draft.habitId ?? null,
+      materialId: draft.materialId ?? null,
+      plannedUnits: draft.plannedUnits ?? null,
+      unitFrom: draft.unitFrom ?? null,
+      unitTo: draft.unitTo ?? null,
+      url: draft.url ?? null,
       remindMinutesBefore: draft.remindMinutesBefore ?? null,
       now
     })
@@ -171,6 +194,8 @@ const PATCH_COLUMNS: Record<string, string> = {
   sortOrder: 'sort_order',
   goalId: 'goal_id',
   milestoneId: 'milestone_id',
+  doneUnits: 'done_units',
+  url: 'url',
   remindMinutesBefore: 'remind_minutes_before'
 }
 

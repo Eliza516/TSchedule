@@ -19,7 +19,8 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "better-sqlite3": "^13.0.3"
+    "better-sqlite3": "^13.0.3",
+    "pdfjs-dist": "^6.3.289"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",

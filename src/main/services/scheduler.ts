@@ -1,9 +1,10 @@
-import { powerMonitor } from 'electron'
-import type { DayString } from '@shared/types'
+import { powerMonitor, shell } from 'electron'
+import type { DayString, Task } from '@shared/types'
 import { MINUTE_MS, minutesOfDay, parseHhMm, toDayString } from '@shared/time'
 import * as reminderRepo from '../db/repos/reminders'
 import * as taskRepo from '../db/repos/tasks'
 import * as goalRepo from '../db/repos/goals'
+import * as materialRepo from '../db/repos/materials'
 import { getMeta, getSettings, setMeta } from '../db/repos/settings'
 import * as checkins from './checkins'
 import * as dailyRun from './dailyRun'
@@ -82,9 +83,23 @@ function fireDueReminders(now: number): void {
     if (reminder.kind === 'lead') {
       notifyTaskLead(task, task.remindMinutesBefore ?? settings.defaultRemindMinutesBefore)
     } else {
-      notifyTaskStart(task, () => timer.start(task.id, 'pomodoro'))
+      notifyTaskStart(task, {
+        onStartTimer: () => timer.start(task.id, 'pomodoro'),
+        onOpen: openerFor(task)
+      })
     }
   }
+}
+
+/** What "start now" means for a task: its own link, or its material's file. */
+function openerFor(task: Task): (() => void) | null {
+  if (task.url) {
+    const url = task.url
+    return () => void shell.openExternal(url)
+  }
+  const filePath = task.materialId ? materialRepo.getMaterial(task.materialId)?.filePath : null
+  if (filePath) return () => void shell.openPath(filePath)
+  return null
 }
 
 /**

@@ -6,6 +6,8 @@ import { getDb } from '../db'
 const TABLES = [
   'settings',
   'goals',
+  'materials',
+  'material_sections',
   'milestones',
   'habits',
   'habit_logs',
