@@ -121,6 +121,13 @@ rồi mới Enter.
   estimate") và gợi ý con số sát hơn khi bạn nhập ước tính mới.
 - **Mục tiêu dài hạn** — đếm ngược "47 days left", chia thành milestone, gắn việc hằng ngày vào
   mục tiêu. Mục tiêu nhiều ngày không động tới sẽ bị cảnh báo.
+- **Tài liệu học** — dán link khoá học (Coursera…) hoặc chọn file sách PDF/EPUB vào một mục
+  tiêu, cho biết tổng số bài/trang/chương và ngày phải xong. Mỗi ngày học app tự sinh một task
+  với đúng phần của ngày đó (`Clean Code — trang 45–68 · Ch.3 Functions`), nhắc đúng giờ, và
+  bấm `↗` là mở thẳng khoá học hay file sách. Định mức được **tính lại mỗi ngày** từ phần còn
+  lại, nên lỡ một hôm thì những hôm sau tự gánh chứ không để lại task cũ; đặt trần mỗi ngày thì
+  app báo luôn deadline có khả thi không. Chọn file PDF, app đọc mục lục để điền sẵn số trang và
+  danh sách chương (sửa được, và nhập tay được nếu file không có mục lục).
 - **Habits** — việc lặp lại tự sinh thành task, có streak tôn trọng lịch (habit T2-4-6 không đứt
   streak vào Chủ nhật) và heatmap 12 tuần.
 - **Quick capture** — `⌘⇧Space` từ bất kỳ app nào. Có ngày/giờ thì thành task luôn, không thì
@@ -172,7 +179,7 @@ có màn hình (`xvfb-run`) vì nó dùng preload giả, không đụng tới SQ
 ### Bố cục
 
 ```
-src/shared/      logic thuần dùng chung, có test — checkinPolicy, quickAdd, recurrence, stats
+src/shared/      logic thuần dùng chung, có test — checkinPolicy, quickAdd, recurrence, stats, studyPlan
 src/main/        tiến trình chính: DB + repository, scheduler, timer, check-in, tray, IPC
 src/preload/     cầu contextBridge duy nhất, kênh được allow-list
 src/renderer/    React: cửa sổ chính, cửa sổ check-in, ô quick capture
