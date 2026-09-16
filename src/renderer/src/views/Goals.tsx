@@ -3,6 +3,7 @@ import type { GoalWithProgress } from '@shared/types'
 import { formatMinutes, toDayString } from '@shared/time'
 import { api, report, useLive } from '../api'
 import { Countdown } from '../components/Chips'
+import { MaterialsCard } from '../components/Materials'
 
 export function Goals(): React.JSX.Element {
   const [goals] = useLive(() => api.invoke('goals:list'), [])
@@ -150,6 +151,8 @@ function GoalDetail({ goal, onBack }: { goal: GoalWithProgress; onBack: () => vo
 
         <div className="view__split">
           <div className="stack" style={{ gap: 18 }}>
+            <MaterialsCard goal={goal} />
+
             <section className="card">
               <div className="card__title">Milestones</div>
               {goal.milestones.length === 0 && (
@@ -276,7 +279,7 @@ function GoalDetail({ goal, onBack }: { goal: GoalWithProgress; onBack: () => vo
   )
 }
 
-const COLORS = ['#2f6f66', '#6a4fbf', '#b4690e', '#a32a20', '#2a6099', '#7a3f6d']
+const COLORS = ['#7c5cff', '#3d9dff', '#ff5fa6', '#12b3a6', '#ff8a3d', '#5ac24b']
 
 function GoalForm({ goal, onDone }: { goal?: GoalWithProgress; onDone: () => void }): React.JSX.Element {
   const [title, setTitle] = useState(goal?.title ?? '')

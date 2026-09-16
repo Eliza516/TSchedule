@@ -85,6 +85,22 @@ app.whenReady().then(async () => {
       }
     }
 
+    // Open the first goal so the study materials attached to it get exercised.
+    if (await navigate(main, 'Goals')) {
+      const opened = await main.webContents.executeJavaScript(`
+        (() => {
+          const card = document.querySelector('.goal-card')
+          if (!card) return false
+          card.click()
+          return true
+        })()
+      `)
+      if (!opened) problems.push('[index.html] no goal card to open')
+      await new Promise((r) => setTimeout(r, 600))
+      await assertRendered(main, 'index.html:GoalDetail', '.material')
+      await shoot(main, '3b-goal-materials')
+    }
+
     const checkin = await openPage('checkin.html', 860, 760)
     await assertRendered(checkin, 'checkin.html', '.triage')
     await shoot(checkin, '8-checkin-evening')

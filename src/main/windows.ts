@@ -39,7 +39,7 @@ export function createMainWindow(): BrowserWindow {
     title: 'TSchedule',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 14, y: 16 },
-    backgroundColor: '#f6f6f4',
+    backgroundColor: '#fbfaff',
     webPreferences: { preload, sandbox: false, contextIsolation: true }
   })
 
@@ -111,7 +111,7 @@ export function createCheckinWindow(): BrowserWindow {
     fullscreenable: false,
     skipTaskbar: false,
     alwaysOnTop: true,
-    backgroundColor: '#f6f6f4',
+    backgroundColor: '#fbfaff',
     title: 'Check in',
     webPreferences: { preload, sandbox: false, contextIsolation: true }
   })

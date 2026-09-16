@@ -18,6 +18,23 @@ export function TaskRow({ task, goals, settings, running, highlighted }: Props):
   const [title, setTitle] = useState(task.title)
   const rowRef = useRef<HTMLDivElement>(null)
   const goal = goals.find((g) => g.id === task.goalId)
+  // A material's file lives in main, so the row asks for it once and only when
+  // the task actually came from one.
+  const [materialFilePath, setMaterialFilePath] = useState<string | null>(null)
+  useEffect(() => {
+    if (!task.materialId) {
+      setMaterialFilePath(null)
+      return
+    }
+    let cancelled = false
+    void api.invoke('materials:list').then((materials) => {
+      if (cancelled) return
+      setMaterialFilePath(materials.find((m) => m.id === task.materialId)?.filePath ?? null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [task.materialId])
 
   useEffect(() => setTitle(task.title), [task.title])
   useEffect(() => {
@@ -45,6 +62,12 @@ export function TaskRow({ task, goals, settings, running, highlighted }: Props):
 
   function startTimer(): void {
     void api.invoke('timer:start', task.id, 'pomodoro').catch(report)
+  }
+
+  /** Whatever this task is about: a course page, a book, a link on a note. */
+  function openSource(): void {
+    if (task.url) void api.invoke('app:openExternal', task.url).catch(report)
+    else if (materialFilePath) void api.invoke('app:openPath', materialFilePath).catch(report)
   }
 
   return (
@@ -95,6 +118,11 @@ export function TaskRow({ task, goals, settings, running, highlighted }: Props):
         >
           {task.isMit ? '★' : '☆'}
         </button>
+        {(task.url || materialFilePath) && (
+          <button type="button" className="icon-btn" title="Open the course, book or link" onClick={openSource}>
+            ↗
+          </button>
+        )}
         {!done && (
           <button type="button" className="icon-btn" title="Start a focus session" onClick={startTimer}>
             ▶
@@ -132,6 +160,8 @@ function TaskEditor({
   const [goalId, setGoalId] = useState(task.goalId ?? '')
   const [tags, setTags] = useState(task.tags.join(', '))
   const [notes, setNotes] = useState(task.notes ?? '')
+  const [url, setUrl] = useState(task.url ?? '')
+  const [doneUnits, setDoneUnits] = useState(task.doneUnits != null ? String(task.doneUnits) : '')
 
   function save(): void {
     const [y, m, d] = day.split('-').map(Number)
@@ -148,6 +178,8 @@ function TaskEditor({
         startAt,
         estimateMinutes: parsedEstimate,
         goalId: goalId || null,
+        url: url.trim() || null,
+        ...(task.materialId ? { doneUnits: doneUnits === '' ? null : Number(doneUnits) } : {}),
         notes: notes.trim() || null,
         tags: tags
           .split(',')
@@ -197,6 +229,30 @@ function TaskEditor({
                 </option>
               ))}
           </select>
+        </label>
+        {task.materialId && (
+          <label className="field">
+            <span className="field__label">Đã học được</span>
+            <input
+              className="input input--inline"
+              inputMode="numeric"
+              placeholder={task.plannedUnits != null ? String(task.plannedUnits) : ''}
+              value={doneUnits}
+              onChange={(e) => setDoneUnits(e.target.value)}
+            />
+            <span className="field__hint">
+              Ít hơn kế hoạch thì phần còn lại tự chia sang những ngày sau
+            </span>
+          </label>
+        )}
+        <label className="field">
+          <span className="field__label">Link</span>
+          <input
+            className="input input--inline"
+            placeholder="https://…"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
         </label>
         <label className="field">
           <span className="field__label">Tags</span>

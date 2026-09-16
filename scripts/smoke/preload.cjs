@@ -33,7 +33,8 @@ function task(id, title, extra) {
   return Object.assign({
     id, title, notes: null, day, startAt: null, estimateMinutes: 45, status: 'todo',
     notDoneReason: null, isMit: false, sortOrder: 1, goalId: null, milestoneId: null,
-    habitId: null, remindMinutesBefore: null, rolledOverCount: 0, originalDay: day,
+    habitId: null, materialId: null, plannedUnits: null, doneUnits: null, unitFrom: null,
+    unitTo: null, url: null, remindMinutesBefore: null, rolledOverCount: 0, originalDay: day,
     completedAt: null, createdAt: Date.now(), updatedAt: Date.now(), tags: [], actualMinutes: 0
   }, extra)
 }
@@ -43,7 +44,46 @@ const tasks = [
   task('t2', 'Revise chapter 4', { isMit: true, estimateMinutes: 90, goalId: 'g1', actualMinutes: 112 }),
   task('t3', 'Email the supervisor', { estimateMinutes: 15, startAt: Date.now() + 7200000 }),
   task('t4', 'Tidy reading notes', { estimateMinutes: 30, rolledOverCount: 4, originalDay: '2026-03-01', tags: ['admin'] }),
-  task('t5', 'Morning stretch', { habitId: 'h1', estimateMinutes: 10, status: 'done', completedAt: Date.now(), actualMinutes: 12 })
+  task('t5', 'Morning stretch', { habitId: 'h1', estimateMinutes: 10, status: 'done', completedAt: Date.now(), actualMinutes: 12 }),
+  task('t6', 'Machine Learning — 6 bài (bài 13–18)', {
+    goalId: 'g1', materialId: 'mat1', plannedUnits: 6, unitFrom: 13, unitTo: 18,
+    url: 'https://coursera.org/learn/machine-learning', estimateMinutes: 90,
+    startAt: Date.now() + 10800000
+  }),
+  task('t7', 'Clean Code — trang 45–68 · Ch.3 Functions', {
+    goalId: 'g1', materialId: 'mat2', plannedUnits: 24, unitFrom: 45, unitTo: 68,
+    estimateMinutes: 48
+  })
+]
+
+const materials = [
+  {
+    id: 'mat1', goalId: 'g1', kind: 'course', title: 'Machine Learning',
+    url: 'https://coursera.org/learn/machine-learning', filePath: null, unitKind: 'lesson',
+    totalUnits: 60, unitsDoneBefore: 0, minutesPerUnit: 15, weekdays: [0, 1, 2, 3, 4],
+    studyTime: '20:00', maxUnitsPerDay: null, targetDate: '2026-04-26', active: true,
+    createdAt: Date.now(), updatedAt: Date.now(), sections: [], unitsDone: 12,
+    pace: {
+      remainingUnits: 48, studyDaysLeft: 8, unitsToday: 6, unitFrom: 13, unitTo: 18,
+      minutesToday: 90, overloaded: false, projectedFinishDay: null
+    }
+  },
+  {
+    id: 'mat2', goalId: 'g1', kind: 'book', title: 'Clean Code',
+    url: null, filePath: '/Users/me/Books/clean-code.pdf', unitKind: 'page',
+    totalUnits: 320, unitsDoneBefore: 0, minutesPerUnit: 2, weekdays: [0, 2, 4, 6],
+    studyTime: '21:30', maxUnitsPerDay: 20, targetDate: '2026-04-10', active: true,
+    createdAt: Date.now(), updatedAt: Date.now(),
+    sections: [
+      { id: 's1', materialId: 'mat2', title: 'Ch.1 Clean Code', startUnit: 1, endUnit: 44, sortOrder: 1 },
+      { id: 's2', materialId: 'mat2', title: 'Ch.3 Functions', startUnit: 45, endUnit: 120, sortOrder: 2 }
+    ],
+    unitsDone: 44,
+    pace: {
+      remainingUnits: 276, studyDaysLeft: 12, unitsToday: 20, unitFrom: 45, unitTo: 68,
+      minutesToday: 40, overloaded: true, projectedFinishDay: '2026-05-04'
+    }
+  }
 ]
 
 const responses = {
@@ -55,6 +95,9 @@ const responses = {
   'tasks:summary': { day, planned: 4, done: 1, dropped: 0, estimatedMinutes: 190, actualMinutes: 124, pomodoros: 3 },
   'goals:list': [goal],
   'goals:tasks': tasks.slice(0, 3),
+  'materials:list': materials,
+  'materials:forGoal': materials,
+  'materials:sections': materials[1].sections,
   'habits:list': [{
     id: 'h1', title: 'Morning stretch', schedule: { type: 'daily' }, goalId: null,
     estimateMinutes: 10, defaultTime: '07:30', active: true, createdAt: Date.now(),

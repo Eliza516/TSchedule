@@ -13,13 +13,13 @@ import { Week } from './views/Week'
 type View = 'today' | 'week' | 'goals' | 'habits' | 'stats' | 'inbox' | 'settings'
 
 const NAV: { view: View; label: string; glyph: string }[] = [
-  { view: 'today', label: 'Today', glyph: '◉' },
-  { view: 'week', label: 'Week', glyph: '▤' },
-  { view: 'goals', label: 'Goals', glyph: '◈' },
-  { view: 'habits', label: 'Habits', glyph: '↻' },
-  { view: 'stats', label: 'Stats', glyph: '▲' },
-  { view: 'inbox', label: 'Inbox', glyph: '⌂' },
-  { view: 'settings', label: 'Settings', glyph: '⚙' }
+  { view: 'today', label: 'Today', glyph: '📅' },
+  { view: 'week', label: 'Week', glyph: '🗓' },
+  { view: 'goals', label: 'Goals', glyph: '🎯' },
+  { view: 'habits', label: 'Habits', glyph: '🔁' },
+  { view: 'stats', label: 'Stats', glyph: '📊' },
+  { view: 'inbox', label: 'Inbox', glyph: '📥' },
+  { view: 'settings', label: 'Settings', glyph: '⚙️' }
 ]
 
 export function App(): React.JSX.Element {

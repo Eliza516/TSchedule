@@ -59,6 +59,15 @@ export function TaskChips({
       </span>
     )
   }
+  if (task.plannedUnits != null && task.unitFrom != null && task.unitTo != null) {
+    const covered = task.doneUnits != null ? ` · xong ${task.doneUnits}` : ''
+    chips.push(
+      <span key="units" className="chip chip--focus">
+        {task.unitFrom === task.unitTo ? task.unitFrom : `${task.unitFrom}–${task.unitTo}`}
+        {covered}
+      </span>
+    )
+  }
   if (task.habitId) chips.push(<span key="habit" className="chip">habit</span>)
   if (task.rolledOverCount >= staleAfter) {
     chips.push(
