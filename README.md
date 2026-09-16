@@ -25,7 +25,7 @@ npm run build:mac           # cả Apple Silicon và Intel
 npm run build:mac:arm64     # chỉ Apple Silicon, nhanh hơn
 ```
 
-Kết quả nằm trong `dist/`, kiểu `TSchedule-0.1.0-arm64.dmg`.
+Kết quả nằm trong `dist/`, kiểu `TSchedule-0.2.0-arm64.dmg`.
 
 > **Đừng chạy `electron-builder` trực tiếp.** Hai script trên chạy `npm run build`
 > trước rồi mới đóng gói. Gọi thẳng `npx electron-builder --mac` sẽ đóng gói cây

@@ -1,6 +1,6 @@
 {
   "name": "tschedule",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Local daily planner with enforced morning/evening check-ins, task timers and long-term goal countdowns",
   "main": "./out/main/index.js",
   "license": "MIT",

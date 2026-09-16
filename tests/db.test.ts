@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { closeDatabase, initDatabase } from '../src/main/db'
+import Database from 'better-sqlite3'
+import { closeDatabase, initDatabase, runMigrations, type Db } from '../src/main/db'
+import { MIGRATIONS } from '../src/main/db/migrations'
 import * as tasks from '../src/main/db/repos/tasks'
 import * as goals from '../src/main/db/repos/goals'
 import * as materials from '../src/main/db/repos/materials'
@@ -299,5 +301,45 @@ describe('materials', () => {
     const task = tasks.createTask({ title: 'Read', day: TODAY, materialId: id })
     materials.deleteMaterial(id)
     expect(tasks.getTask(task.id)!.materialId).toBeNull()
+  })
+})
+
+describe('upgrading an existing database', () => {
+  /** A database as it was before study materials existed, with real data in it. */
+  function openVersionOne(): Db {
+    const db = new Database(':memory:')
+    db.pragma('foreign_keys = ON')
+    db.exec(MIGRATIONS[0])
+    db.pragma('user_version = 1')
+    db.prepare(
+      `INSERT INTO goals (id, title, status, created_at, updated_at) VALUES ('g1', 'Exam', 'active', 1, 1)`
+    ).run()
+    db.prepare(
+      `INSERT INTO tasks (id, title, day, status, is_mit, sort_order, goal_id, rolled_over_count, created_at, updated_at)
+       VALUES ('t1', 'Revise chapter 4', '2026-03-09', 'done', 0, 1, 'g1', 0, 1, 1)`
+    ).run()
+    return db
+  }
+
+  it('brings it up to date without touching what is already there', () => {
+    const db = openVersionOne()
+    runMigrations(db)
+
+    expect(db.pragma('user_version', { simple: true })).toBe(MIGRATIONS.length)
+    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get('t1') as Record<string, unknown>
+    expect(task.title).toBe('Revise chapter 4')
+    expect(task.goal_id).toBe('g1')
+    // The new columns exist and are empty, which is what "not a study task" means.
+    expect(task.material_id).toBeNull()
+    expect(task.done_units).toBeNull()
+    expect(task.url).toBeNull()
+  })
+
+  it('is safe to run again on an already-current database', () => {
+    const db = openVersionOne()
+    runMigrations(db)
+    runMigrations(db)
+    expect(db.pragma('user_version', { simple: true })).toBe(MIGRATIONS.length)
+    expect(db.prepare('SELECT COUNT(*) AS n FROM tasks').get()).toEqual({ n: 1 })
   })
 })
